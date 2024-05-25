@@ -1,0 +1,9 @@
+server:
+  port: 8081
+
+database:
+  user: root
+  password: 12345 # boa prática colocar a senha em variável de ambiente!
+  host: 127.0.0.1
+  port: 3306
+  name: GOLANG_DB
