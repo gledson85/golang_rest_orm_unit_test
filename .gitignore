@@ -1,1 +1,6 @@
-/.idea/*
+# IDE
+.idea/
+*.iml
+
+# Claude Code
+.claude/

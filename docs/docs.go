@@ -9,7 +9,13 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "contact": {
+            "name": "API Support",
+            "url": "https://github.com/gleds/golang_rest_orm_unit_test"
+        },
+        "license": {
+            "name": "MIT"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -17,28 +23,34 @@ const docTemplate = `{
     "paths": {
         "/users": {
             "get": {
-                "description": "Get all users",
+                "description": "Returns a list of all registered users. Returns an empty array if no users exist.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "users"
                 ],
-                "summary": "Get all users",
+                "summary": "List all users",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "List of users",
                         "schema": {
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/models.User"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ResponseError"
+                        }
                     }
                 }
             },
             "post": {
-                "description": "Create a new user with the input payload",
+                "description": "Creates a new user in the database. The ID field is auto-generated and should not be provided in the request body.",
                 "consumes": [
                     "application/json"
                 ],
@@ -51,7 +63,7 @@ const docTemplate = `{
                 "summary": "Create a new user",
                 "parameters": [
                     {
-                        "description": "User to create",
+                        "description": "User payload",
                         "name": "user",
                         "in": "body",
                         "required": true,
@@ -61,14 +73,20 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "User created successfully",
                         "schema": {
                             "$ref": "#/definitions/models.User"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/controllers.ResponseError"
                         }
@@ -78,7 +96,7 @@ const docTemplate = `{
         },
         "/users/{id}": {
             "get": {
-                "description": "Get a user by ID",
+                "description": "Returns a single user matching the given ID.",
                 "produces": [
                     "application/json"
                 ],
@@ -88,6 +106,7 @@ const docTemplate = `{
                 "summary": "Get a user by ID",
                 "parameters": [
                     {
+                        "minimum": 1,
                         "type": "integer",
                         "description": "User ID",
                         "name": "id",
@@ -97,13 +116,13 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "User found",
                         "schema": {
                             "$ref": "#/definitions/models.User"
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "User not found",
                         "schema": {
                             "$ref": "#/definitions/controllers.ResponseError"
                         }
@@ -111,7 +130,7 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Update a user by ID with the input payload",
+                "description": "Updates the name and/or email of an existing user. The user must exist or a 404 is returned.",
                 "consumes": [
                     "application/json"
                 ],
@@ -124,6 +143,7 @@ const docTemplate = `{
                 "summary": "Update a user by ID",
                 "parameters": [
                     {
+                        "minimum": 1,
                         "type": "integer",
                         "description": "User ID",
                         "name": "id",
@@ -131,7 +151,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "User to update",
+                        "description": "Updated user payload",
                         "name": "user",
                         "in": "body",
                         "required": true,
@@ -142,19 +162,25 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "User updated successfully",
                         "schema": {
                             "$ref": "#/definitions/models.User"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid request body",
                         "schema": {
                             "$ref": "#/definitions/controllers.ResponseError"
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/controllers.ResponseError"
                         }
@@ -162,7 +188,7 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Delete a user by ID",
+                "description": "Permanently removes a user from the database. The user must exist or a 404 is returned.",
                 "produces": [
                     "application/json"
                 ],
@@ -172,6 +198,7 @@ const docTemplate = `{
                 "summary": "Delete a user by ID",
                 "parameters": [
                     {
+                        "minimum": 1,
                         "type": "integer",
                         "description": "User ID",
                         "name": "id",
@@ -181,13 +208,19 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "User deleted successfully",
                         "schema": {
                             "$ref": "#/definitions/controllers.ResponseMessage"
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "User not found",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/controllers.ResponseError"
                         }
@@ -201,7 +234,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "error": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "User not found"
                 }
             }
         },
@@ -209,7 +243,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "message": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "User deleted"
                 }
             }
         },
@@ -217,13 +252,16 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "john@example.com"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "John Doe"
                 }
             }
         }
@@ -235,9 +273,9 @@ var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8081",
 	BasePath:         "/",
-	Schemes:          []string{},
+	Schemes:          []string{"http"},
 	Title:            "User API",
-	Description:      "This is a sample server for a user management API.",
+	Description:      "REST API for user management with CRUD operations.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

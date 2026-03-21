@@ -12,14 +12,13 @@ import (
 )
 
 var DB *gorm.DB
-var err error
 
 func InitDatabase() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("./config")
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Error reading config file, %s", err)
+		log.Fatalf("Error reading config file: %v", err)
 	}
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
@@ -29,18 +28,26 @@ func InitDatabase() {
 		viper.GetInt("database.port"),
 		viper.GetString("database.name"),
 	)
+
+	var err error
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	DB.AutoMigrate(&models.User{})
+	if err := DB.AutoMigrate(&models.User{}); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
 }
 
 func SetupTestDB() {
+	var err error
 	DB, err = gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("failed to initialize database, got error %v", err)
+		log.Fatalf("Failed to initialize test database: %v", err)
 	}
-	DB.AutoMigrate(&models.User{})
+
+	if err := DB.AutoMigrate(&models.User{}); err != nil {
+		log.Fatalf("Failed to run test migrations: %v", err)
+	}
 }

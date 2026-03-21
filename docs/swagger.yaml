@@ -3,50 +3,65 @@ definitions:
   controllers.ResponseError:
     properties:
       error:
+        example: User not found
         type: string
     type: object
   controllers.ResponseMessage:
     properties:
       message:
+        example: User deleted
         type: string
     type: object
   models.User:
     properties:
       email:
+        example: john@example.com
         type: string
       id:
+        example: 1
         type: integer
       name:
+        example: John Doe
         type: string
     type: object
 host: localhost:8081
 info:
-  contact: {}
-  description: This is a sample server for a user management API.
+  contact:
+    name: API Support
+    url: https://github.com/gleds/golang_rest_orm_unit_test
+  description: REST API for user management with CRUD operations.
+  license:
+    name: MIT
   title: User API
   version: "1.0"
 paths:
   /users:
     get:
-      description: Get all users
+      description: Returns a list of all registered users. Returns an empty array
+        if no users exist.
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: List of users
           schema:
             items:
               $ref: '#/definitions/models.User'
             type: array
-      summary: Get all users
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/controllers.ResponseError'
+      summary: List all users
       tags:
       - users
     post:
       consumes:
       - application/json
-      description: Create a new user with the input payload
+      description: Creates a new user in the database. The ID field is auto-generated
+        and should not be provided in the request body.
       parameters:
-      - description: User to create
+      - description: User payload
         in: body
         name: user
         required: true
@@ -55,12 +70,16 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: User created successfully
           schema:
             $ref: '#/definitions/models.User'
         "400":
-          description: Bad Request
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/controllers.ResponseError'
+        "500":
+          description: Internal server error
           schema:
             $ref: '#/definitions/controllers.ResponseError'
       summary: Create a new user
@@ -68,10 +87,12 @@ paths:
       - users
   /users/{id}:
     delete:
-      description: Delete a user by ID
+      description: Permanently removes a user from the database. The user must exist
+        or a 404 is returned.
       parameters:
       - description: User ID
         in: path
+        minimum: 1
         name: id
         required: true
         type: integer
@@ -79,21 +100,26 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: User deleted successfully
           schema:
             $ref: '#/definitions/controllers.ResponseMessage'
         "404":
-          description: Not Found
+          description: User not found
+          schema:
+            $ref: '#/definitions/controllers.ResponseError'
+        "500":
+          description: Internal server error
           schema:
             $ref: '#/definitions/controllers.ResponseError'
       summary: Delete a user by ID
       tags:
       - users
     get:
-      description: Get a user by ID
+      description: Returns a single user matching the given ID.
       parameters:
       - description: User ID
         in: path
+        minimum: 1
         name: id
         required: true
         type: integer
@@ -101,11 +127,11 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: User found
           schema:
             $ref: '#/definitions/models.User'
         "404":
-          description: Not Found
+          description: User not found
           schema:
             $ref: '#/definitions/controllers.ResponseError'
       summary: Get a user by ID
@@ -114,14 +140,16 @@ paths:
     put:
       consumes:
       - application/json
-      description: Update a user by ID with the input payload
+      description: Updates the name and/or email of an existing user. The user must
+        exist or a 404 is returned.
       parameters:
       - description: User ID
         in: path
+        minimum: 1
         name: id
         required: true
         type: integer
-      - description: User to update
+      - description: Updated user payload
         in: body
         name: user
         required: true
@@ -131,18 +159,24 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: User updated successfully
           schema:
             $ref: '#/definitions/models.User'
         "400":
-          description: Bad Request
+          description: Invalid request body
           schema:
             $ref: '#/definitions/controllers.ResponseError'
         "404":
-          description: Not Found
+          description: User not found
+          schema:
+            $ref: '#/definitions/controllers.ResponseError'
+        "500":
+          description: Internal server error
           schema:
             $ref: '#/definitions/controllers.ResponseError'
       summary: Update a user by ID
       tags:
       - users
+schemes:
+- http
 swagger: "2.0"
